@@ -1,16 +1,17 @@
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.*;
-
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataInputStream;
-import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IOUtils;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Hashtable;
+import java.util.List;
 
 public class Hw1Grp0 {
 
@@ -63,6 +64,8 @@ public class Hw1Grp0 {
         return strings;
     }
 
+    public
+
     public static void main(String[] args) throws IOException, URISyntaxException{
         if (args.length != 4) {
             System.out.println("Usage:R=<file 1> S=<file 2> join:R2=S3 res:R4,S5");
@@ -70,8 +73,9 @@ public class Hw1Grp0 {
         }
         Hw1Grp0 hw1Grp0 = new Hw1Grp0();
         hw1Grp0.paramProcessing(args);
-        List<String> strings = hw1Grp0.readHDFSTable(file_R_Uri);
-        Hashtable<String, List<String[]>> stringListHashtable = hw1Grp0.HDFSToHashTable(strings);
-        System.out.println(stringListHashtable);
+        List<String> stringsForR = hw1Grp0.readHDFSTable(file_R_Uri);
+        Hashtable<String, List<String[]>> stringListHashtable = hw1Grp0.HDFSToHashTable(stringsForR);
+        List<String> stringsForS = hw1Grp0.readHDFSTable(file_S_Uri);
+
     }
 }

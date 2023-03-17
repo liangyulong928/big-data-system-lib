@@ -1,6 +1,6 @@
 # 大数据系统与大规模数据分析（实验一）实操记录
 
-###### 梁宇龙	2023年3月16日于中国科学院大学
+###### 梁宇龙	2023年3月17日于中国科学院大学
 
 ## 一、Docker容器初始化设置
 
@@ -132,8 +132,7 @@ public void ParamProcessing(String[] args){
   File_S_Uri = args[1].split("=")[1];
   JoinKeyForR = Integer.parseInt(args[2].split(":")[1].split("=")[0].substring(1));
   JoinKeyForS = Integer.parseInt(args[2].split(":")[1].split("=")[1].substring(1));
-  ResForR = Integer.parseInt(args[3].split(":")[1].split(",")[0].substring(1));
-  ResForS = Integer.parseInt(args[3].split(":")[1].split(",")[1].substring(1));
+  resList = Arrays.asList(args[3].split(":")[1].split(","));
 }
 ```
 
@@ -175,14 +174,53 @@ public Hashtable<String,List<String[]>> HDFSToHashTable(List<String> lines){
 使用customer.tbl试运行的中间结果如下；
 
 ```shell
-root@2ce55076d336:~# java Hw1Grp0 R=/hw1/customer.tbl S=/hw1/customer.tbl join:R2=S3 res:R4,S5
+root@<CONTAINER ID>:~# java Hw1Grp0 R=/hw1/customer.tbl S=/hw1/customer.tbl join:R2=S3 res:R4,S5
 {
   kbYrf d uR=[[Ljava.lang.String;@2a640157], 
 	naLuK8XKUP72msE0e=[[Ljava.lang.String;@52851b44], 
   e53JADEeGvM1ikhN7aa=[[Ljava.lang.String;@584f54e6], 
-  5J941XxxkE=[[Ljava.lang.String;@5d8bafa9],...,
+  5J941XxxkE=[[Ljava.lang.String;@5d8bafa9],
+  ...,
   GLZCUQrtiNTrPKdK 0O86ZF=[[Ljava.lang.String;@2755d705]
 }
 ```
 
 这里可能会出现的问题：如果需要做hashjoin的key存在一个key对应多个value的情况该如何保存？
+
+解决方法，通过对key判定是否存值分类讨论。
+
+```java
+public Hashtable<String,List<String[]>> HDFSToHashTable(List<String> lines){
+  Hashtable<String, List<String[]>> stringListHashtable = new Hashtable<String, List<String[]>>();
+  for (String line : lines){
+    String[] split = line.split("\\|");
+    /*使用分类讨论方式代替直接寻值覆盖*/
+    if (stringListHashtable.get(split[joinKeyForR])!=null){
+      List<String[]> strings = stringListHashtable.get(split[joinKeyForR]);
+      strings.add(split);
+      stringListHashtable.put(split[joinKeyForR],strings);
+    }
+    else {
+      ArrayList<String[]> strings = new ArrayList<>();
+      strings.add(split);
+      stringListHashtable.put(split[joinKeyForR],strings);
+    }
+  }
+  return stringListHashtable;
+}
+```
+
+此时结果：
+
+```json
+root@<CONTAINER ID>:~# java Hw1Grp0 R=/hw1/customer.tbl S=/hw1/customer.tbl join:R3=S3 res:R4,S5
+{
+  19=[[Ljava.lang.String;@2a640157,..., [Ljava.lang.String;@10ded6a9],
+	18=[[Ljava.lang.String;@c5dc4a2,..., [Ljava.lang.String;@5911e990], 
+  17=[[Ljava.lang.String;@31000e60,..., [Ljava.lang.String;@49872d67], 
+  ...,
+  20=[[Ljava.lang.String;@770d0ea6,..., [Ljava.lang.String;@2755d705]
+}
+//此时，一个key中可对应保存多个value值
+```
+
