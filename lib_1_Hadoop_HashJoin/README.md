@@ -1,4 +1,4 @@
-# 大数据系统与大规模数据分析（实验一）实操记录
+# 大数据系统HDFS+HashJoin+HBase实验记录
 
 ###### 梁宇龙	2023年3月17日于中国科学院大学
 
@@ -261,5 +261,17 @@ public void hashJoin(Hashtable<String, List<String[]>> R,List<String> strings_S)
     }
   }
 }
+```
+
+结果：
+
+```shell
+root@<CONTAINER ID>:~# java Hw1Grp0 R=/hw1/customer.tbl S=/hw1/customer.tbl join:R3=S3 res:R4,S5
+-join key=15,R4=25-989-741-2988,S5=711.56
+-join key=15,R4=25-430-914-2194,S5=711.56
+-join key=15,R4=25-344-968-5422,S5=711.56
+...
+-join key=5,R4=15-200-872-4790,S5=6910.79
+total 91544
 ```
 
