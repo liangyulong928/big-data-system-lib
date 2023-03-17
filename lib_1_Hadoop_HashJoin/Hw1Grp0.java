@@ -64,7 +64,38 @@ public class Hw1Grp0 {
         return strings;
     }
 
-    public
+    public void hashJoinForOneRecord(String[] recordForR,String[] recordForS,ArrayList<Integer> projectionForR,ArrayList<Integer> projectionForS){
+        StringBuilder output = new StringBuilder("-join key=" + recordForR[joinKeyForR]);
+        for (Integer res_R:projectionForR){
+            output.append(",R").append(res_R).append("=").append(recordForR[res_R]);
+        }
+        for (Integer res_S:projectionForS){
+            output.append(",S").append(res_S).append("=").append(recordForS[res_S]);
+        }
+        System.out.println(output);
+    }
+
+    public void hashJoin(Hashtable<String, List<String[]>> R,List<String> strings_S){
+        ArrayList<Integer> projectionForR = new ArrayList<>();
+        ArrayList<Integer> projectionForS = new ArrayList<>();
+        for (String res : resList){
+            if (res.charAt(0) == 'R'){
+                projectionForR.add(Integer.valueOf(res.substring(1)));
+            }
+            if (res.charAt(0) == 'S'){
+                projectionForS.add(Integer.valueOf(res.substring(1)));
+            }
+        }
+        for (String line : strings_S){
+            String[] split = line.split("\\|");
+            if (R.get(split[joinKeyForS])!=null){
+                List<String[]> strings = R.get(split[joinKeyForS]);
+                for (String[] record : strings){
+                    hashJoinForOneRecord(record,split,projectionForR,projectionForS);
+                }
+            }
+        }
+    }
 
     public static void main(String[] args) throws IOException, URISyntaxException{
         if (args.length != 4) {
@@ -76,6 +107,6 @@ public class Hw1Grp0 {
         List<String> stringsForR = hw1Grp0.readHDFSTable(file_R_Uri);
         Hashtable<String, List<String[]>> stringListHashtable = hw1Grp0.HDFSToHashTable(stringsForR);
         List<String> stringsForS = hw1Grp0.readHDFSTable(file_S_Uri);
-
+        hw1Grp0.hashJoin(stringListHashtable,stringsForS);
     }
 }

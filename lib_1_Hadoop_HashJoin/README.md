@@ -212,7 +212,7 @@ public Hashtable<String,List<String[]>> HDFSToHashTable(List<String> lines){
 
 此时结果：
 
-```json
+```shell
 root@<CONTAINER ID>:~# java Hw1Grp0 R=/hw1/customer.tbl S=/hw1/customer.tbl join:R3=S3 res:R4,S5
 {
   19=[[Ljava.lang.String;@2a640157,..., [Ljava.lang.String;@10ded6a9],
@@ -221,6 +221,45 @@ root@<CONTAINER ID>:~# java Hw1Grp0 R=/hw1/customer.tbl S=/hw1/customer.tbl join
   ...,
   20=[[Ljava.lang.String;@770d0ea6,..., [Ljava.lang.String;@2755d705]
 }
-//此时，一个key中可对应保存多个value值
+/*此时，一个key中可对应保存多个value值*/
+```
+
+## 五、HashJoin连接
+
+使用已经对表R生成的HashTable和已经完成表S分词的String[]进行hashJoin连接
+
+```Java
+	List<String> stringsForR = hw1Grp0.readHDFSTable(file_R_Uri);
+	Hashtable<String, List<String[]>> stringListHashtable = hw1Grp0.HDFSToHashTable(stringsForR);
+	List<String> stringsForS = hw1Grp0.readHDFSTable(file_S_Uri);
+	hw1Grp0.hashJoin(stringListHashtable,stringsForS);
+```
+
+如何实现：
+
+```Java
+public void hashJoin(Hashtable<String, List<String[]>> R,List<String> strings_S){
+  //创建投影集合，确保在HashJoin后可以准确投影
+  ArrayList<Integer> projectionForR = new ArrayList<>();
+  ArrayList<Integer> projectionForS = new ArrayList<>();
+  for (String res : resList){
+    if (res.charAt(0) == 'R'){
+      projectionForR.add(Integer.valueOf(res.substring(1)));
+    }
+    if (res.charAt(0) == 'S'){
+      projectionForS.add(Integer.valueOf(res.substring(1)));
+    }
+  }
+  //对表S中每一条记录进行Hash查询，找到可以进行HashJoin的表R中的所有记录，对每一条记录进行hashJoin
+  for (String line : strings_S){
+    String[] split = line.split("\\|");
+    if (R.get(split[joinKeyForS])!=null){
+      List<String[]> strings = R.get(split[joinKeyForS]);
+      for (String[] record : strings){
+        hashJoinForOneRecord(record,split,projectionForR,projectionForS);
+      }
+    }
+  }
+}
 ```
 
