@@ -33,14 +33,16 @@ public class Hw1Grp0 {
         Hashtable<String, List<String[]>> stringListHashtable = new Hashtable<String, List<String[]>>();
         for (String line : lines){
             String[] split = line.split("\\|");
-//            if (stringListHashtable.get(split[joinKeyForR])!=null){
-//                List<String[]> strings = stringListHashtable.get(split[joinKeyForR]);
-//                strings.add(split);
-//                stringListHashtable.put(split[joinKeyForR],strings);
-//            }
-//            else {
-                stringListHashtable.put(split[joinKeyForR], Collections.singletonList(split));
-//            }
+            if (stringListHashtable.get(split[joinKeyForR])!=null){
+                List<String[]> strings = stringListHashtable.get(split[joinKeyForR]);
+                strings.add(split);
+                stringListHashtable.put(split[joinKeyForR],strings);
+            }
+            else {
+                ArrayList<String[]> strings = new ArrayList<>();
+                strings.add(split);
+                stringListHashtable.put(split[joinKeyForR],strings);
+            }
         }
         return stringListHashtable;
     }
