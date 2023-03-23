@@ -8,7 +8,7 @@
 
 下载镜像：dingms/ucas-bdms-hw-u64-2019
 
-创建一个新的容器：
+创建一个新的容器（Desktop启动会报错，一定使用命令启动！）：
 
 ```shell
 docker run -itd <Image Id>
@@ -48,17 +48,35 @@ Starting secondary namenodes [0.0.0.0]
 0.0.0.0: starting secondarynamenode, logging to /home/bdms/setup/hadoop-2.9.2/logs/hadoop-root-secondarynamenode-2ce55076d336.out
 ```
 
-确认HDFS可以使用：
+启动HBase模块：
+
+```shell
+root@<CONTAINER ID>:~# start-hbase.sh
+localhost: starting zookeeper, logging to /home/bdms/setup/hbase-0.98.11-hadoop2/bin/../logs/hbase-root-zookeeper-<CONTAINER ID>.out
+starting master, logging to /home/bdms/setup/hbase-0.98.11-hadoop2//logs/hbase--master-<CONTAINER ID>.out
+localhost: starting regionserver, logging to /home/bdms/setup/hbase-0.98.11-hadoop2/bin/../logs/hbase-root-regionserver-<CONTAINER ID>.out
+```
+
+确认HDFS和HBase可以使用：
 
 ```shell
 root@<CONTAINER ID>:/# jps
-310 DataNode
-487 SecondaryNameNode
-175 NameNode
-655 Jps
+1377 Jps
+194 NameNode
+949 HQuorumPeer
+1158 HRegionServer
+1015 HMaster
+522 SecondaryNameNode
+300 DataNode
 root@<CONTAINER ID>:/# hadoop fs -ls /
 Found 1 items
 drwxr-xr-x   - root supergroup          0 2019-03-15 10:03 /hbase
+root@<CONTAINER ID>:~# hbase shell
+2023-03-22 13:36:18,592 INFO  [main] Configuration.deprecation: hadoop.native.lib is deprecated. Instead, use io.native.lib.available
+HBase Shell; enter 'help<RETURN>' for list of supported commands.
+Type "exit<RETURN>" to leave the HBase Shell
+Version 0.98.11-hadoop2, r6e6cf74c1161035545d95921816121eb3a516fe0, Tue Mar  3 00:23:49 PST 2015
+hbase(main):002:0> exit
 ```
 
 ## 二、将数据传入HDFS中
@@ -283,3 +301,4 @@ root@<CONTAINER ID>:~# java Hw1Grp0 R=/hw1/nation.tbl S=/hw1/customer.tbl join:R
 total 1615
 ```
 
+## 六、将输出结果存入HBase中
