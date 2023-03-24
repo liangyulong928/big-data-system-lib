@@ -377,3 +377,82 @@ total 4845
 ```
 
 通过结果集判定，HashJoin共输出1615条记录，在HBase中每条记录存储三个column key，共1615*3=4845条记录，数据吻合。准备提交测试。
+
+## 七、使用自动化测试机制进行测试
+
+根据自动化机制README.md进行环境准备配置。
+
+特别注意：执行 **$ ./myprepare** 之前需要确保HDFS系统中已经创建好 **/hw1** 文件夹
+
+如果报错需要进行下面操作：
+
+```shell
+root@<CONTAINER ID>:~/hw1-check# hadoop fs -mkdir /hw1
+```
+
+执行自动化测试结果如下：
+
+```shell
+root@<CONTAINER ID>:~/hw1-check# ./run-test.pl ./score ../0_202228013329016_hw1.java 
+------------------------------------------------------------
+[Fri Mar 24 06:07:19 UTC 2023] 1 ../0_202228013329016_hw1.java
+------------------------------------------------------------
+rm -rf sandbox
+mkdir sandbox
+cp ../0_202228013329016_hw1.java sandbox/Hw1Grp0.java
+------------------------------------------------------------
+Compile
+------------------------------------------------------------
+cd sandbox; javac Hw1Grp0.java 2>&1; cd ..
+------------------------------------------------------------
+Run R=/hw1/join_0R.tbl S=/hw1/join_0S.tbl join:R0=S0 res:R1,S1
+------------------------------------------------------------
+hbase shell ./hbase-drop-result >/dev/null 2>&1
+cd sandbox; java Hw1Grp0 R=/hw1/join_0R.tbl S=/hw1/join_0S.tbl join:R0=S0 res:R1,S1 >0.out 2>&1; cd ..
+cd bld; java HBase2TableAll Result rowkey res:R1 res:S1 > r.tbl; cd ..
+...
+mv bld/r.tbl sandbox/0.tbl
+------------------------------------------------------------
+Run R=/hw1/join_1R.tbl S=/hw1/join_1S.tbl join:R0=S0 res:R1,S1
+------------------------------------------------------------
+hbase shell ./hbase-drop-result >/dev/null 2>&1
+cd sandbox; java Hw1Grp0 R=/hw1/join_1R.tbl S=/hw1/join_1S.tbl join:R0=S0 res:R1,S1 >1.out 2>&1; cd ..
+cd bld; java HBase2TableAll Result rowkey res:R1 res:S1 > r.tbl; cd ..
+...
+mv bld/r.tbl sandbox/1.tbl
+------------------------------------------------------------
+Run R=/hw1/join_2R.tbl S=/hw1/join_2S.tbl join:R0=S0 res:R1,S1
+------------------------------------------------------------
+hbase shell ./hbase-drop-result >/dev/null 2>&1
+cd sandbox; java Hw1Grp0 R=/hw1/join_2R.tbl S=/hw1/join_2S.tbl join:R0=S0 res:R1,S1 >2.out 2>&1; cd ..
+cd bld; java HBase2TableAll Result rowkey res:R1 res:S1 > r.tbl; cd ..
+...
+mv bld/r.tbl sandbox/2.tbl
+------------------------------------------------------------
+checkResult sandbox/0.tbl result-sorted/join_0res.tbl
+------------------------------------------------------------
+sort sandbox/0.tbl > sandbox/tmp.tbl
+diff sandbox/tmp.tbl result-sorted/join_0res.tbl >sandbox/0.tbl.diff 2>&1
+good
+------------------------------------------------------------
+checkResult sandbox/1.tbl result-sorted/join_1res.tbl
+------------------------------------------------------------
+sort sandbox/1.tbl > sandbox/tmp.tbl
+diff sandbox/tmp.tbl result-sorted/join_1res.tbl >sandbox/1.tbl.diff 2>&1
+good
+------------------------------------------------------------
+checkResult sandbox/2.tbl result-sorted/join_2res.tbl
+------------------------------------------------------------
+sort sandbox/2.tbl > sandbox/tmp.tbl
+diff sandbox/tmp.tbl result-sorted/join_2res.tbl >sandbox/2.tbl.diff 2>&1
+good
+rm -rf ../0_202228013329016_hw1; mv sandbox ../0_202228013329016_hw1
+```
+
+查看分数：
+
+```shell
+root@711673ba01b7:~/hw1-check# cat score 
+../0_202228013329016_hw1.java raw score: 3
+```
+
