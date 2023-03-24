@@ -274,6 +274,7 @@ public void hashJoin(Hashtable<String, List<String[]>> R,List<String> strings_S)
     if (R.get(split[joinKeyForS])!=null){
       List<String[]> strings = R.get(split[joinKeyForS]);
       for (String[] record : strings){
+        /*hashJoinForOneRecord方法完成两条记录连接和投影*/
         hashJoinForOneRecord(record,split,projectionForR,projectionForS);
       }
     }
@@ -302,3 +303,77 @@ total 1615
 ```
 
 ## 六、将输出结果存入HBase中
+
+### 1、建立HBase配置
+
+```Java
+public Configuration HBaseConfiguration() throws MasterNotRunningException, IOException{
+  HTableDescriptor hTableDescriptor = new HTableDescriptor(TableName.valueOf(tableName));
+  HColumnDescriptor res = new HColumnDescriptor(column_family);
+  hTableDescriptor.addFamily(res);
+  Configuration configuration = HBaseConfiguration.create();
+  HBaseAdmin hAdmin = new HBaseAdmin(configuration);
+  //此处保证如果HBase中存入同名表进行替换
+  if (hAdmin.tableExists(tableName)) {
+    hAdmin.disableTable(tableName);
+    hAdmin.deleteTable(tableName);
+    hAdmin.createTable(hTableDescriptor);
+    System.out.println("table "+tableName+ " update successfully");
+  }
+  else {
+    hAdmin.createTable(hTableDescriptor);
+    System.out.println("table "+tableName+ " created successfully");
+  }
+  hAdmin.close();
+  return configuration;
+}
+```
+
+### 2、在hashJoinForOneRecord方法中完成存表
+
+```Java
+/*对hashJoin部分两条记录连接投影由输出改为存表*/
+public void hashJoinForOneRecord(String[] recordForR,String[] recordForS,ArrayList<Integer> projectionForR,ArrayList<Integer> projectionForS,HTable table) throws IOException {
+  Put put = new Put(recordForR[joinKeyForR].getBytes());
+  for (Integer res_R:projectionForR){
+    put.add(column_family.getBytes(),("R"+res_R).getBytes(),recordForR[res_R].getBytes());
+  }
+  for (Integer res_S:projectionForS){
+    put.add(column_family.getBytes(),("S"+res_S).getBytes(),recordForS[res_S].getBytes());
+  }
+  table.put(put);
+}
+```
+
+### 3、结果验证
+
+```shell
+hbase(main):001:0> scan 'Result'
+SLF4J: Class path contains multiple SLF4J bindings.
+SLF4J: Found binding in [jar:file:/home/bdms/setup/hbase-0.98.11-hadoop2/lib/slf4j-log4j12-1.6.4.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+SLF4J: Found binding in [jar:file:/home/bdms/setup/hadoop-2.9.2/share/hadoop/common/lib/slf4j-log4j12-1.7.25.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+SLF4J: See http://www.slf4j.org/codes.html#multiple_bindings for an explanation.
+ROW                                      COLUMN+CELL                                                                                                          
+ 0                                       column=res:R1, timestamp=1679544959750, value=ALGERIA                                                                
+ 0                                       column=res:R1.1, timestamp=1679544959753, value=ETHIOPIA                                                             
+ 0                                       column=res:R1.10, timestamp=1679544959892, value=ALGERIA                                                             
+ 0                                       column=res:R1.100, timestamp=1679544961697, value=ALGERIA                                                            
+ 0                                       column=res:R1.101, timestamp=1679544961699, value=ETHIOPIA                                                           
+ 0                                       column=res:R1.102, timestamp=1679544961703, value=KENYA                                                              
+ 0                                       column=res:R1.103, timestamp=1679544961705, value=MOROCCO                                                            
+ 0                                       column=res:R1.104, timestamp=1679544961708, value=MOZAMBIQUE
+ ...
+ 4                                       column=res:S5.91, timestamp=1679544960976, value=7760.52                                                             
+ 4                                       column=res:S5.92, timestamp=1679544960978, value=7760.52                                                             
+ 4                                       column=res:S5.93, timestamp=1679544960981, value=7760.52                                                             
+ 4                                       column=res:S5.94, timestamp=1679544960983, value=7760.52                                                             
+ 4                                       column=res:S5.95, timestamp=1679544961046, value=3001.94                                                             
+ 4                                       column=res:S5.96, timestamp=1679544961049, value=3001.94                                                             
+ 4                                       column=res:S5.97, timestamp=1679544961053, value=3001.94                                                             
+ 4                                       column=res:S5.98, timestamp=1679544961056, value=3001.94                                                             
+ 4                                       column=res:S5.99, timestamp=1679544961058, value=3001.94                                                             
+5 row(s) in 1.9070 seconds
+total 4845
+```
+
+通过结果集判定，HashJoin共输出1615条记录，在HBase中每条记录存储三个column key，共1615*3=4845条记录，数据吻合。准备提交测试。
