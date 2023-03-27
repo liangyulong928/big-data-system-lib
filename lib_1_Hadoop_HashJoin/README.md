@@ -333,17 +333,27 @@ public Configuration HBaseConfiguration() throws MasterNotRunningException, IOEx
 
 ```Java
 /*对hashJoin部分两条记录连接投影由输出改为存表*/
-public void hashJoinForOneRecord(String[] recordForR,String[] recordForS,ArrayList<Integer> projectionForR,ArrayList<Integer> projectionForS,HTable table) throws IOException {
+public void hashJoinForOneRecord(String[] recordForR,String[] recordForS,ArrayList<Integer> projectionForR,ArrayList<Integer> projectionForS,HTable table) throws NullPointerException,IOException {
+  joinKeyCountMap.putIfAbsent(recordForR[joinKeyForR], 0);
   Put put = new Put(recordForR[joinKeyForR].getBytes());
   for (Integer res_R:projectionForR){
-    put.add(column_family.getBytes(),("R"+res_R).getBytes(),recordForR[res_R].getBytes());
+    put.add(column_family.getBytes(),
+                    joinKeyCountMap.get(recordForR[joinKeyForR])!=0?("R"+res_R+"."+joinKeyCountMap.get(recordForR[joinKeyForR])).getBytes():("R"+res_R).getBytes(),
+                    recordForR[res_R].getBytes());
   }
   for (Integer res_S:projectionForS){
-    put.add(column_family.getBytes(),("S"+res_S).getBytes(),recordForS[res_S].getBytes());
+    put.add(column_family.getBytes(),
+                    joinKeyCountMap.get(recordForR[joinKeyForR])!=0?("S"+res_S+"."+joinKeyCountMap.get(recordForR[joinKeyForR])).getBytes():("S"+res_S).getBytes(),
+                    recordForS[res_S].getBytes());
   }
   table.put(put);
+  joinKeyCountMap.put(recordForR[joinKeyForR],joinKeyCountMap.get(recordForR[joinKeyForR]) + 1);
 }
 ```
+
+在对两条记录根据JoinKey做连接投影的过程中，首先要确定本次连接属于该JoinKey的第几次连接次数，为了避免在HBase中产生覆盖。
+
+采用三元式根据该key是否是第一次Join表示对非0次key做角标标注。
 
 ### 3、结果验证
 
