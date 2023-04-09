@@ -93,7 +93,7 @@ lineitem.tbl  orders.tbl  partsupp.tbl  supplier.tbl
 在hadoop中创建目录hw1
 
 ```shell
-root@<CONTAINER ID>:/home/bdms/homework/hw1/input# c
+root@<CONTAINER ID>:/home/bdms/homework/hw1/input# hadoop fs -mkdir /hw1
 ```
 
 将实验数据存入HDFS中，并验证是否存入成功
