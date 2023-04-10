@@ -20,14 +20,21 @@ public class Hw2Part1 {
         private Text token = new Text();
         private Text time = new Text();
 
-        public void map(Object key, Text value, Context context) throws IOException, InterruptedException, NumberFormatException {
+        public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
             String valueList = value.toString();
             StringTokenizer itr = new StringTokenizer(value.toString(),"\n");
             while (itr.hasMoreTokens()) {
                 String[] record = itr.nextToken().split(" ");
-                token.set(record[0]+" "+record[1]);
-                time.set(record[2]);
-                context.write(token,time);
+                if(record.length == 3){
+                    try {
+                        Float.parseFloat(record[2]);
+                        token.set(record[0]+" "+record[1]);
+                        time.set(record[2]);
+                        context.write(token,time);
+                    } catch (NumberFormatException e) {
+
+                    }
+                }
             }
         }
     }
@@ -59,8 +66,7 @@ public class Hw2Part1 {
             int count = 0;
             float alltime = 0;
             for (Text val : values) {
-                String result = val.toString();
-                String[] split = result.split(" ");
+                String[] split = val.toString().split(" ");
                 count += Integer.parseInt(split[0]);
                 alltime += Float.parseFloat(split[1]);
             }
