@@ -21,7 +21,6 @@ public class Hw2Part1 {
         private Text time = new Text();
 
         public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
-            String valueList = value.toString();
             StringTokenizer itr = new StringTokenizer(value.toString(),"\n");
             while (itr.hasMoreTokens()) {
                 String[] record = itr.nextToken().split(" ");
