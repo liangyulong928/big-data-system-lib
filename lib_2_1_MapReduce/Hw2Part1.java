@@ -17,26 +17,25 @@ import org.apache.hadoop.util.GenericOptionsParser;
 
 public class Hw2Part1 {
     public static class TokenizerMapper extends Mapper<Object, Text, Text, Text> {
-        private Text word = new Text();
-        private Text one = new Text();
+        private Text token = new Text();
+        private Text time = new Text();
 
         public void map(Object key, Text value, Context context) throws IOException, InterruptedException, NumberFormatException {
             String valueList = value.toString();
             StringTokenizer itr = new StringTokenizer(value.toString(),"\n");
             while (itr.hasMoreTokens()) {
-                String[] token = itr.nextToken().split(" ");
-                word.set(token[0]+" "+token[1]);
-                one.set(token[2]);
-                context.write(word,one);
+                String[] record = itr.nextToken().split(" ");
+                token.set(record[0]+" "+record[1]);
+                time.set(record[2]);
+                context.write(token,time);
             }
         }
     }
 
     public static class CountCombiner extends Reducer<Text, Text, Text, Text> {
-        private Text countToken = new Text();
         private Text result = new Text();
 
-        public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
+        public void reduce(Text token, Iterable<Text> values, Context context) throws IOException, InterruptedException {
             int count = 0;
             float alltime = 0;
             for (Text val : values) {
@@ -44,22 +43,19 @@ public class Hw2Part1 {
                 alltime += Float.parseFloat(val.toString());
             }
             result.set(String.valueOf(count)+" "+String.valueOf(alltime));
-            countToken.set(key.toString());
-            context.write(countToken, result);
+            context.write(token, result);
         }
     }
 
     public static class TimeAveReducer extends Reducer<Text, Text, Text, Text> {
-        private Text result_key = new Text();
         private Text result_value = new Text();
-        private byte[] suffix;
 
         protected void setup(Context context) {
             Configuration conf = context.getConfiguration();
             conf.set("mapreduce.output.textoutputformat.separator", " ");
         }
 
-        public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
+        public void reduce(Text token, Iterable<Text> values, Context context) throws IOException, InterruptedException {
             int count = 0;
             float alltime = 0;
             for (Text val : values) {
@@ -68,9 +64,8 @@ public class Hw2Part1 {
                 count += Integer.parseInt(split[0]);
                 alltime += Float.parseFloat(split[1]);
             }
-            result_key.set(key);
             result_value.set(String.valueOf(count) + " " + String.valueOf(alltime/count));
-            context.write(result_key, result_value);
+            context.write(token, result_value);
         }
     }
 
