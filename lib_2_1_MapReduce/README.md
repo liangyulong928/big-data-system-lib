@@ -181,6 +181,6 @@ root@36f965b5aab0:~/hw2/hw2-check# ./run-test-part1.pl ./score 0_xx_hw2.java
 [Mon Apr 10 02:34:07 UTC 2023] 1 0_xx_hw2.java
 ------------------------------------------------------------
 ...
-0_xx_hw2.java raw score: 2
+0_xx_hw2.java raw score: 2 / 2
 ```
 
